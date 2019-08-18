@@ -311,6 +311,7 @@
         return new Promise(function(resolve, reject){
             try{
                 AsciiArt.Image.create(options, function(err, rendered){
+                    if(err) return reject(err);
                     resolve(rendered);
                 });
             }catch(ex){

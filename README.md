@@ -24,7 +24,7 @@ npm install ascii-art-image
 Usage
 ------
 
-<a name="module_ascii_art_ansi"></a>
+<a name="module_ascii_art_image_top"></a>
 ### require('ascii-art-image')
 To do anything with it, you'll need to include the library:
 
@@ -33,7 +33,7 @@ const Image = require('ascii-art-image');
 ```
 
 * [ascii-art-image](#module_ascii_art_image) ⇒ <code>AsciiArtImage</code>
-* [Image.create(ansi_string, handler)](#module_ascii_art_image.create) ⇒ <code>string</code>
+* [Image.create(ansi_string, handler)](#module_ascii_art_image.create) ⇒ <code>Promise</code>(If callback not provided)
 
 
 <a name="module_ascii_art_image"></a>
@@ -55,15 +55,19 @@ the constructor takes an options argument
 
 
 <a name="module_ascii_art_image.create"></a>
-### Image.create(ansiString, handler)
+### Image.create(options, callback)
 Map through an ansi string one character at a time, without any of those characters being styles.
 
 **Kind**: static property of <code>[ascii-art-image](#ascii-art-image)</code>
 
 | Param | Type | Description |
 | --- | --- | --- |
-| ansiString | <code>string</code> | input string to map across |
-| handler | <code>function</code> | the function to map through the string |
+| options | <code>Object</code> | the set of options being passed |
+| options.alphabet | <code>string</code> | characters used to draw the image. One of: `variant1`, `variant2`, `variant3`, `variant4`, `ultra-wide`, `wide`, `hatching`, `bits`, `binary`, `greyscale`, `blocks` |
+| options.filepath | <code>string</code> | The path of the image |
+| options.width | <code>Int</code> | The width to render the image |
+| options.height | <code>Int</code> | The height to render the image |
+| options.distance | <code>function</code> | a function which takes in 6 args (2x rgb) and returns a measure of distance between these two colors |
 
 **Examples**
 
