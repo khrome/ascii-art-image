@@ -338,7 +338,7 @@
 
     AsciiArt.Image.create = function(options, callback){
         if(!callback){
-            return AsciiArt.Figlet.newReturnContext();
+            return AsciiArt.Image.newReturnContext();
         }else{
             var image = new AsciiArt.Image({
                 filepath: '~/Images/metropolis.jpg',

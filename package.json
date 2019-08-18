@@ -1,6 +1,6 @@
 {
   "name": "ascii-art-image",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "devDependencies": {
     "chai": "^4.2.0",
     "color-difference": "^0.3.4",
