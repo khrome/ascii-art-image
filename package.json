@@ -1,11 +1,12 @@
 {
   "name": "ascii-art-image",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "devDependencies": {
     "chai": "^4.2.0",
     "color-difference": "^0.3.4",
     "mocha": "^6.2.0"
   },
+  "main":"image.js",
   "peerDependencies": {
     "ascii-art-ansi": "^0.1.1"
 },
