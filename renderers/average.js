@@ -1,12 +1,12 @@
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
-        define(['ascii-art-ansi'], factory);
+        define(['ascii-art-ansi', 'ascii-art-ansi/color'], factory);
     } else if (typeof module === 'object' && module.exports) {
-        module.exports = factory(require('ascii-art-ansi'));
+        module.exports = factory(require('ascii-art-ansi'), require('ascii-art-ansi/color'));
     } else {
         root.AsciiArt.AverageRenderer = factory();
     }
-}(this, function (ansi) {
+}(this, function (ansi, Color) {
     var AsciiArt;
     var getValue = function(r, g, b){
         return (r+g+b)/3;
@@ -38,11 +38,10 @@
                 for(var y=0; y < height; y++){
                     for(var x=0; x < width; x++){
                         var offset = y * width * 4 + x * 4;
-                        var color = image.parentClass.getTerminalColor(
+                        var color = Color.code([
                             data[offset],
                             data[offset+1],
-                            data[offset+2],
-                            image.options
+                            data[offset+2]]
                         );
                         var fraction = getValue(
                             data[offset],
@@ -50,7 +49,7 @@
                             data[offset+2]
                         )/255;
                         var charPosition = Math.floor(image.options.alphabet.length*fraction);
-                        result += ansi.Codes( (image.options.alphabet[charPosition] || ' '), color || 'off' , true);
+                        result += color + (image.options.alphabet[charPosition] || ' ')
                         //result += (image.options.alphabet[charPosition] || ' ');
                     }
                     result += "\n";
