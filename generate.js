@@ -52,6 +52,8 @@ arrays.forEachEmission(images, function(item, key, done){
     //if(needsAccurateColor.indexOf(item) !== -1) options.distance = moreAccurateColor;
     if(alternateAlphabets[item]) options.alphabet = alternateAlphabets[item];
     options.alphabet = 'solid';
+    //Color.isTrueColor = true;
+    //Color.is256 = true;
     var image = new Image(options);
     var file = options.filepath.split('/').pop();
     var pos = file.indexOf('.');

@@ -79,6 +79,7 @@
         this.parentClass = AsciiArt.Image;
         if(!options.alphabet) options.alphabet = 'ultra-wide';
         options.alphabet = AsciiArt.Image.valueScales[options.alphabet];
+        if(options.invertValue) options.alphabet = options.alphabet.reverse();
         if(AsciiArt.Image.debug){
             console.log('ALPHABET', "\n", options.alphabet);
         }

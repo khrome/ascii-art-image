@@ -1,6 +1,6 @@
 {
   "name": "ascii-art-image",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "devDependencies": {
     "async-arrays": "^1.0.1",
     "chai": "^4.2.0",
