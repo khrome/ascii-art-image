@@ -24,6 +24,7 @@
         var Canvas = require('canvas');
         var Image = Canvas.Image;
         Canvas = Canvas.Canvas;
+        //global.cairoCanvas = Canvas;
         var fs = require('fs');
         module.exports = factory(
             function(url, cb){
@@ -76,6 +77,23 @@
             }
         }
         var ob = this;
+        var fixDimOptionsAccordingToAspectRatio = function(ob){
+            if(
+                (!ob.options.width) &&
+                (!ob.options.height)
+            ){
+                ob.options.width = 80;
+            }
+            if(ob.options.width){
+                if(!ob.options.height){
+                    ob.options.height = ob.options.width * ob.aspectRatio;
+                }
+            }else{
+                if(ob.options.height){
+                    ob.options.width = ob.options.height / ob.aspectRatio;
+                }
+            }
+        }
         this.parentClass = AsciiArt.Image;
         if(!options.alphabet) options.alphabet = 'ultra-wide';
         options.alphabet = AsciiArt.Image.valueScales[options.alphabet];
@@ -95,26 +113,11 @@
         }
         if(this.options.filepath){
             //todo: handle in UMD wrapper.. pass in assetloader?
-            //console.log('FP>', this.options.filepath)
             readImage(this.options.filepath, function(err, image){
                 if (err) throw err;
                 ob.image = image;
                 ob.aspectRatio = ob.image.height/ob.image.width;
-                if(
-                    (!ob.options.width) &&
-                    (!ob.options.height)
-                ){
-                    ob.options.width = 80;
-                }
-                if(ob.options.width){
-                    if(!ob.options.height){
-                        ob.options.height = ob.options.width * ob.aspectRatio;
-                    }
-                }else{
-                    if(ob.options.height){
-                        ob.options.width = ob.options.height / ob.aspectRatio;
-                    }
-                }
+                fixDimOptionsAccordingToAspectRatio(ob);
                 ob.canvas = new Canvas(ob.image.width, ob.image.height);
                 ob.context = ob.canvas.getContext('2d');
                 ob.context.drawImage(
@@ -126,7 +129,48 @@
                 });
                 jobs = [];
             });
-        }else throw new Error('no filepath provided!');
+        }
+        if(this.options.imageBody){
+            var info = this.options.imageInfo;
+            var body = this.options.imageBody;
+            ob.canvas = new Canvas(info.width, info.height);
+            ob.context = ob.canvas.getContext('2d');
+            ob.context.drawImage(
+                body, 0, 0, info.width, info.height
+            );
+            ob.ready = function(cb){ if(cb) cb() };
+            jobs.forEach(function(job){
+                if(job) job();
+            });
+            jobs = [];
+        }
+        if(this.options.imagePixelFrame){
+            var frame = this.options.imagePixelFrame;
+            ob.aspectRatio = frame.height/frame.width;
+            fixDimOptionsAccordingToAspectRatio(ob);
+            ob.canvas = new Canvas(frame.width, frame.height);
+            ob.context = ob.canvas.getContext('2d');
+            var dataContext = ob.context.getImageData(0,0,frame.width, frame.height);
+            var imageData = dataContext.data;
+            var len = frame.width * frame.height;
+            var offset;
+            var pixset;
+            for (var i=0; i < len;i += 4) {
+                offset = i * 4;
+                pixset = i * 3;
+                imageData[offset] = frame.pixels.readUInt8(pixset);
+                imageData[offset+1] = frame.pixels.readUInt8(pixset+1);
+                imageData[offset+2] = frame.pixels.readUInt8(pixset+2);
+                imageData[offset+3] = 255;
+            }
+            ob.context.putImageData(dataContext, 0, 0);
+            ob.ready = function(cb){ if(cb) cb() };
+            jobs.forEach(function(job){
+                if(job) job();
+            });
+            jobs = [];
+        }
+        //todo: error on no supported options
     };
     AsciiArt.Image.Canvas = Canvas;
     AsciiArt.Image.Image = Image;
@@ -170,7 +214,6 @@
     /*
     AsciiArt.Image.getTerminalColor = function(r, g, b, options){
         return ansiColor.getTerminalColor(r, g, b, options);
-        console.log('?', arguments)
         //return ansiColor.code([r,g,b]);
     }//*/
 
