@@ -74,8 +74,8 @@ var fs = require('fs');*/
 
     var parentDir = __dirname.split('/');
     parentDir.pop();
-    //if(! (typeof module === 'object' && module.exports)) parentDir.pop();
     parentDir = parentDir.join('/');
+    parentDir = parentDir+'/node_modules/ascii-art-docs';
 
     //*
     describe('AsciiArt', function(){
