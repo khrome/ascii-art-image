@@ -1,18 +1,12 @@
 {
   "name": "ascii-art-image",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "devDependencies": {
-    "async-arrays": "^1.0.1",
-    "chai": "^4.2.0",
-    "color-difference": "^0.3.4",
-    "mocha": "^6.2.0"
+    "ascii-art-docs": "^0.0.1"
   },
   "main": "image.js",
   "peerDependencies": {
     "ascii-art-ansi": "^0.1.1"
-  },
-  "devDependencies": {
-    "ascii-art-docs": "^0.0.1"
   },
   "dependencies": {
     "canvas": "^2.6.0"

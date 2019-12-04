@@ -144,26 +144,13 @@
             });
             jobs = [];
         }
-        if(this.options.imagePixelFrame){
-            var frame = this.options.imagePixelFrame;
-            ob.aspectRatio = frame.height/frame.width;
-            fixDimOptionsAccordingToAspectRatio(ob);
-            ob.canvas = new Canvas(frame.width, frame.height);
-            ob.context = ob.canvas.getContext('2d');
-            var dataContext = ob.context.getImageData(0,0,frame.width, frame.height);
-            var imageData = dataContext.data;
-            var len = frame.width * frame.height;
-            var offset;
-            var pixset;
-            for (var i=0; i < len;i += 4) {
-                offset = i * 4;
-                pixset = i * 3;
-                imageData[offset] = frame.pixels.readUInt8(pixset);
-                imageData[offset+1] = frame.pixels.readUInt8(pixset+1);
-                imageData[offset+2] = frame.pixels.readUInt8(pixset+2);
-                imageData[offset+3] = 255;
-            }
-            ob.context.putImageData(dataContext, 0, 0);
+        if(this.options.loader){
+            var result = this.options.loader(this, function(ar){
+                ob.aspectRatio = ar;
+                fixDimOptionsAccordingToAspectRatio(ob);
+            }, Canvas, Image);
+            ob.canvas = result.canvas;
+            ob.context = result.context;
             ob.ready = function(cb){ if(cb) cb() };
             jobs.forEach(function(job){
                 if(job) job();
@@ -201,7 +188,7 @@
                     function(err, text){
                         if(err) return callback(err);
                         if(location) require('fs').writeFile(location, text, function(err){
-                            return callback(err, text);
+                            return callback(err, text, ob.context);
                         });
                         else callback(err, text);
                     }
