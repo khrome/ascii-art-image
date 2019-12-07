@@ -12,7 +12,7 @@
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define([
-            './renderers/average', 'ascii-art-ansi/color', 'ascii-art-ansi'
+            './renderers/average', 'ascii-art-ansi/color', 'ascii-art-ansi', 'ascii-art-ansi/grid'
         ], function(ave, color, ansi){
             return factory(imgLoadBrowser, renderersBrowser, function(){
                 return root.document.createElement('canvas');
@@ -42,7 +42,8 @@
             Image,
             function(){ return require('./renderers/average')},
             require('ascii-art-ansi/color'),
-            require('ascii-art-ansi')
+            require('ascii-art-ansi'),
+            require('ascii-art-ansi/grid')
         );
     } else {
         // Browser globals (root is window)
@@ -53,10 +54,11 @@
             root.Image,
             root.AsciiArt.AverageRenderer,
             root.AsciiArtAnsiColor,
-            root.AsciiArtAnsi
+            root.AsciiArtAnsi,
+            root.AsciiArtAnsiGrid
         );
     }
-}(this, function (readImage, getRenderers, Canvas, Image, getAverage, ansiColor, Ansi) {
+}(this, function(readImage, getRenderers, Canvas, Image, getAverage, ansiColor, Ansi, TextGrid){
     //ansiColor.is256=true;
     //ansiColor.isTrueColor=true;
     //ansiColor.debug=true;
@@ -161,7 +163,7 @@
     };
     AsciiArt.Image.Canvas = Canvas;
     AsciiArt.Image.Image = Image;
-    AsciiArt.Image.prototype.write = function(location, callback){
+    AsciiArt.Image.prototype.write = function(location, callback, type){
         if(typeof location === 'function' && !callback){
             callback = location;
             location = undefined;
@@ -171,7 +173,7 @@
             if(location && location.indexOf('://') !== -1){
                 throw new Error("uris not yet implemented!")
             }else{
-                AsciiArt.Image.renderers[ob.options.renderer].render(
+                AsciiArt.Image.renderers[ob.options.renderer][type||'render'](
                     ob,
                     {
                         imageFromCanvas : function(canvas){
@@ -194,6 +196,33 @@
                     }
                 );
             }
+        });
+    }
+
+    AsciiArt.Image.prototype.writeMask = function(location, callback){
+        return this.write(location, callback, 'mask');
+    }
+    AsciiArt.Image.prototype.writeLineArt = function(location, callback){
+        return this.write(location, callback, 'lineart');
+    }
+    AsciiArt.Image.prototype.writePosterized = function(location, callback){
+        if(typeof location === 'function'){
+            callback = location;
+            location = undefined;
+        }
+        this.options.background = true;
+        var ob = this;
+        this.write(location, function(err, rendered){
+            if(err) return callback(err);
+            ob.options.background = false; //todo:orig
+            var coloredBackground = rendered;
+            ob.writeLineArt(location, function(err, rendered){
+                if(err) return callback(err);
+                var canvas = new TextGrid(coloredBackground);
+                canvas.drawOnto(rendered, 0, 0, true, true);
+                var result = canvas.toString();
+                callback(undefined, result);
+            })
         });
     }
 

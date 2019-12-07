@@ -48,6 +48,44 @@ var fs = require('fs');*/
         });
     }
 
+    function testMask(options, callback, complete){
+        var image = new Image(options);
+        var file = options.filepath.split('/').pop().split('.');
+        file.pop();
+        file = '/images/'+file.join('.')+'.json';
+        fs.readFile(__dirname+file, function(err, result){
+            var compare = JSON.parse(result.toString())
+            image.writeMask(function(err, mask){
+                callback(err, mask, compare.mask, complete);
+            });
+        });
+    }
+
+    function testArt(options, callback, complete){
+        var image = new Image(options);
+        var file = options.filepath.split('/').pop().split('.');
+        file.pop();
+        file = '/images/'+file.join('.')+'.art.nfo';
+        fs.readFile(__dirname+file, function(err, result){
+            image.writeLineArt(function(err, lineart){
+                callback(err, lineart, result, complete);
+            });
+        });
+    }
+
+    function testPoster(options, callback, complete){
+        var image = new Image(options);
+        var file = options.filepath.split('/').pop().split('.');
+        file.pop();
+        file = '/images/'+file.join('.')+'.poster.nfo';
+        fs.readFile(__dirname+file, function(err, result){
+            image.writePosterized(function(err, lineart){
+                //fs.writeFile(__dirname+file, lineart, function(){ });
+                callback(err, lineart, result, complete);
+            });
+        });
+    }
+
     function imageIsValid(err, ascii, expected, done){
         if(err) console.log(err.stack);
         should.exist(ascii);
@@ -80,6 +118,65 @@ var fs = require('fs');*/
     //*
     describe('AsciiArt', function(){
         describe('can render', function(){
+
+            describe('a Mask with', function(){
+
+                describe('the "average" renderer ', function(){
+
+                    it('from a JPEG with default settings', function(done){
+                        this.timeout(5000);
+                        testMask({
+                            filepath: parentDir+'/Images/mucha-job.jpg',
+                            width: 80
+                        }, function(err, ascii, expected, done){
+                            ascii.should.deep.equal(expected);
+                            done();
+                        }, done);
+                    });
+                });
+
+            });
+
+            describe('lineart with', function(){
+
+                describe('the "average" renderer ', function(){
+
+                    it('from a JPEG with default settings', function(done){
+                        this.timeout(5000);
+                        testArt({
+                            filepath: parentDir+'/Images/mucha-job.jpg',
+                            width: 80,
+                            threshold : 120
+                        }, function(err, ascii, expected, done){
+                            ascii.should.deep.equal(expected.toString());
+                            done();
+                        }, done);
+                    });
+                });
+
+            });
+
+            describe('a poster image with', function(){
+
+                describe('the "average" renderer ', function(){
+
+                    it('from a JPEG with default settings', function(done){
+                        this.timeout(5000);
+                        testPoster({
+                            filepath: parentDir+'/Images/peewee.jpeg',
+                            width: 80,
+                            threshold : 120,
+                            stroke:'black+bold',
+                            background : true,
+                        }, function(err, ascii, expected, done){
+                            //console.log(ascii);
+                            ascii.should.deep.equal(expected.toString());
+                            done();
+                        }, done);
+                    });
+                });
+
+            });
 
             describe('an Image with', function(){
 
