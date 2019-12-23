@@ -1,12 +1,12 @@
 {
   "name": "ascii-art-image",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "devDependencies": {
     "ascii-art-docs": "^0.0.1"
   },
   "main": "image.js",
   "peerDependencies": {
-    "ascii-art-ansi": "^1.3.0"
+    "ascii-art-ansi": "^1.3.3"
   },
   "dependencies": {
     "ascii-art-braille": "0.1.0",
