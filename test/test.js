@@ -73,6 +73,18 @@ var fs = require('fs');*/
         });
     }
 
+    function testStipple(options, callback, complete){
+        var image = new Image(options);
+        var file = options.filepath.split('/').pop().split('.');
+        file.pop();
+        file = '/images/'+file.join('.')+'.art.nfo';
+        fs.readFile(__dirname+file, function(err, result){
+            image.writeStipple(function(err, lineart){
+                callback(err, lineart, result, complete);
+            });
+        });
+    }
+
     function testPoster(options, callback, complete){
         var image = new Image(options);
         var file = options.filepath.split('/').pop().split('.');
@@ -143,7 +155,7 @@ var fs = require('fs');*/
 
                     it('from a JPEG with default settings', function(done){
                         this.timeout(5000);
-                        testArt({
+                        testStipple({
                             filepath: parentDir+'/Images/mucha-job.jpg',
                             width: 80,
                             threshold : 120
@@ -165,12 +177,13 @@ var fs = require('fs');*/
                         testPoster({
                             filepath: parentDir+'/Images/peewee.jpeg',
                             width: 80,
-                            threshold : 120,
+                            stippled: true,
+                            threshold : 60,
                             stroke:'black+bold',
                             background : true,
                         }, function(err, ascii, expected, done){
-                            //console.log(ascii);
                             ascii.should.deep.equal(expected.toString());
+                            //fs.writeFile('./tmp.nfo', ascii, function(){ done() });
                             done();
                         }, done);
                     });

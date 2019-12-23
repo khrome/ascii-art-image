@@ -142,9 +142,8 @@
                             data[offset+1],
                             data[offset+2]
                         ];
-                        var color = image.options.background?
-                            Color.backgroundCode(pixelData):
-                            Color.code(pixelData);
+                        var color = Color.code(pixelData);
+                        if(image.options.background) color += Color.backgroundCode(pixelData);
                         var fraction = getValue(
                             data[offset],
                             data[offset+1],
