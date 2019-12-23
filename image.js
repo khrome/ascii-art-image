@@ -125,7 +125,9 @@
                 ob.context.drawImage(
                     ob.image, 0, 0, ob.image.width, ob.image.height
                 );
-                ob.ready = function(cb){ if(cb) cb() };
+                ob.ready = function(cb){
+                    if(cb) cb()
+                };
                 jobs.forEach(function(job){
                     if(job) job();
                 });
@@ -205,6 +207,9 @@
     AsciiArt.Image.prototype.writeLineArt = function(location, callback){
         return this.write(location, callback, 'lineart');
     }
+    AsciiArt.Image.prototype.writeStipple = function(location, callback){
+        return this.write(location, callback, 'stipple');
+    }
     AsciiArt.Image.prototype.writePosterized = function(location, callback){
         if(typeof location === 'function'){
             callback = location;
@@ -216,13 +221,44 @@
             if(err) return callback(err);
             ob.options.background = false; //todo:orig
             var coloredBackground = rendered;
-            ob.writeLineArt(location, function(err, rendered){
-                if(err) return callback(err);
-                var canvas = new TextGrid(coloredBackground);
-                canvas.drawOnto(rendered, 0, 0, true, true);
-                var result = canvas.toString();
-                callback(undefined, result);
-            })
+            var ot = ob.options.threshold;
+            if(ob.options.threshold){
+                ob.options.threshold = Math.min(255, ob.options.threshold*(ob.options.darken || 2))
+            }
+            if(ob.options.blended){
+                ob.writeStipple(location, function(err, rendered){
+                    if(err) return callback(err);
+                    var canvas = new TextGrid(coloredBackground);
+                    canvas.drawOnto(rendered, 0, 0, false, true);
+                    var previousResult = canvas.toString();
+                    ob.options.threshold = ot;
+                    ob.writeLineArt(location, function(err, rendered){
+                        if(err) return callback(err);
+                        var canvas = new TextGrid(previousResult);
+                        canvas.drawOnto(rendered, 0, 0, true, true);
+                        var result = canvas.toString();
+                        callback(undefined, result);
+                    })
+                })
+            }else{
+                if(ob.options.stippled){
+                    ob.writeStipple(location, function(err, rendered){
+                        if(err) return callback(err);
+                        var canvas = new TextGrid(coloredBackground);
+                        canvas.drawOnto(rendered, 0, 0, false, true);
+                        var result = canvas.toString();
+                        callback(undefined, result);
+                    })
+                }else{
+                    ob.writeLineArt(location, function(err, rendered){
+                        if(err) return callback(err);
+                        var canvas = new TextGrid(coloredBackground);
+                        canvas.drawOnto(rendered, 0, 0, false, true);
+                        var result = canvas.toString();
+                        callback(undefined, result);
+                    })
+                }
+            }
         });
     }
 

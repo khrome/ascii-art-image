@@ -27,6 +27,33 @@
             var originalWidth = image.options.width;
             var originalHeight = image.options.height;
             image.options.width = image.options.width * 2;
+            image.options.height = image.options.height * 2;
+            return result.mask(image, utils, function(err, mask){
+                var rows = [];
+                mask.forEach(function(value, index){
+                    if(index % image.options.width === 0) rows.push([]);
+                    rows[rows.length-1].push(value);
+                });
+                rows = rows.map(function(line){
+                    return line.map(function(value){
+                        return value < (image.options.threshold || 50);
+                    });
+                });
+                var result = braille.binary2DMapToBlocks(rows);
+                image.options.width = originalWidth;
+                image.options.height = originalHeight;
+                callback(undefined, result.map(function(line){
+                    if(image.options.stroke) line = line.map(function(char){
+                        return ansi.codes(char, image.options.stroke)
+                    })
+                    return line.join('');
+                }).join("\n"), result);
+            });
+        },
+        stipple : function(image, utils, callback){
+            var originalWidth = image.options.width;
+            var originalHeight = image.options.height;
+            image.options.width = image.options.width * 2;
             image.options.height = image.options.height * 4;
             return result.mask(image, utils, function(err, mask){
                 var rows = [];
@@ -40,6 +67,8 @@
                     });
                 });
                 var result = braille.binary2DMapToBraille(rows);
+                image.options.width = originalWidth;
+                image.options.height = originalHeight;
                 callback(undefined, result.map(function(line){
                     if(image.options.stroke) line = line.map(function(char){
                         return ansi.codes(char, image.options.stroke)
@@ -114,8 +143,8 @@
                             data[offset+2]
                         ];
                         var color = image.options.background?
-                            Color.code(pixelData):
-                            Color.backgroundCode(pixelData);
+                            Color.backgroundCode(pixelData):
+                            Color.code(pixelData);
                         var fraction = getValue(
                             data[offset],
                             data[offset+1],
