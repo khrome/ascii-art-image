@@ -226,13 +226,25 @@
                 ob.options.threshold = Math.min(255, ob.options.threshold*(ob.options.darken || 2))
             }
             if(ob.options.blended){
-                ob.writeStipple(location, function(err, rendered){
+                var stipplePrefix = (typeof ob.options.stippled === 'string')?
+                    ansiColor.code(ob.options.stippled):
+                    '';
+                var linePrefix = (typeof ob.options.lineart === 'string')?
+                    ansiColor.code(ob.options.lineart) || '':
+                    '';
+                ob.writeStipple(location, function(err, r){
+                    var rendered = Ansi.map(r,function(chr, styles){
+                            return stipplePrefix+styles.join()+chr;
+                    });
                     if(err) return callback(err);
                     var canvas = new TextGrid(coloredBackground);
                     canvas.drawOnto(rendered, 0, 0, false, true);
                     var previousResult = canvas.toString();
                     ob.options.threshold = ot;
-                    ob.writeLineArt(location, function(err, rendered){
+                    ob.writeLineArt(location, function(err, r){
+                        var rendered = Ansi.map(r,function(chr, styles){
+                                return linePrefix+styles.join()+chr;
+                        });
                         if(err) return callback(err);
                         var canvas = new TextGrid(previousResult);
                         canvas.drawOnto(rendered, 0, 0, true, true);
@@ -242,7 +254,13 @@
                 })
             }else{
                 if(ob.options.stippled){
-                    ob.writeStipple(location, function(err, rendered){
+                    var prefix = (typeof ob.options.stippled === 'string')?
+                        ansiColor.code(ob.options.stippled):
+                        '';
+                    ob.writeStipple(location, function(err, r){
+                        var rendered = Ansi.map(r,function(chr, styles){
+                                return prefix+styles.join()+chr;
+                        });
                         if(err) return callback(err);
                         var canvas = new TextGrid(coloredBackground);
                         canvas.drawOnto(rendered, 0, 0, false, true);
@@ -312,10 +330,27 @@
             return AsciiArt.Image.newReturnContext(options);
         }else{
             var image = new AsciiArt.Image(options);
-
-            image.write(function(err, rendered){
-                callback(err, rendered);
-            });
+            if(options.posterized){
+                image.writePosterized(function(err, rendered){
+                    callback(err, rendered);
+                });
+            }else{
+                if(options.lineart){
+                    image.writeLineArt(function(err, rendered){
+                        callback(err, rendered);
+                    });
+                }else{
+                    if(options.stippled){
+                        image.writeStipple(function(err, rendered){
+                            callback(err, rendered);
+                        });
+                    }else{
+                        image.write(function(err, rendered){
+                            callback(err, rendered);
+                        });
+                    }
+                }
+            }
         }
     }
 
