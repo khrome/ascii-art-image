@@ -2,7 +2,10 @@
   "name": "ascii-art-image",
   "version": "1.3.0",
   "devDependencies": {
-    "ascii-art-docs": "^0.0.1"
+    "ascii-art-docs": "^0.0.1",
+    "chai": "^4.3.4",
+    "color-difference": "^0.3.4",
+    "mocha": "^8.3.2"
   },
   "main": "image.js",
   "peerDependencies": {
