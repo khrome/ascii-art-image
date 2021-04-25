@@ -50,7 +50,7 @@
         root.AsciiArtImage = factory(
             imgLoadBrowser,
             renderersBrowser,
-            (root.Canvas || root.HTMLCanvasElement),
+            (root.Canvas || function(){ return root.document.createElement('canvas') }),
             root.Image,
             function(){ return root.AsciiArtAverageRenderer},
             root.AsciiArtAnsiColor,
