@@ -52,7 +52,7 @@
             renderersBrowser,
             root.Canvas,
             root.Image,
-            root.AsciiArt.AverageRenderer,
+            root.AsciiArtAverageRenderer,
             root.AsciiArtAnsiColor,
             root.AsciiArtAnsi,
             root.AsciiArtAnsiGrid
