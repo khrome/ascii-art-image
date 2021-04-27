@@ -50,7 +50,14 @@
         root.AsciiArtImage = factory(
             imgLoadBrowser,
             renderersBrowser,
-            (root.Canvas || function(){ return root.document.createElement('canvas') }),
+            (root.Canvas || function(width, height){
+                var canvas = root.document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                //var context = canvas.getContext('2d');
+                //context
+                return canvas;
+            }),
             root.Image,
             function(){ return root.AsciiArtAverageRenderer},
             root.AsciiArtAnsiColor,
@@ -178,10 +185,20 @@
                 AsciiArt.Image.renderers[ob.options.renderer][type||'render'](
                     ob,
                     {
-                        imageFromCanvas : function(canvas){
+                        imageFromCanvas : function(canvas, cb){
                             var newImage = new Image();
-                            if(canvas.toBuffer) newImage.src = canvas.toBuffer();
-                            else newImage.src = canvas.toDataURL();
+                            if(canvas.toBuffer){
+                                newImage.src = canvas.toBuffer();
+                                //in node, the img is immediately available
+                                setTimeout(function(){
+                                    cb(null, newImage);
+                                }, 0)
+                            }else{
+                                newImage.src = canvas.toDataURL();
+                                newImage.onload = function(){
+                                    cb(null, newImage);
+                                }
+                            }
                             return newImage;
                         },
                         canvas : function(width, height){

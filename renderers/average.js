@@ -83,36 +83,37 @@
                 var height = image.options.height;
                 var distortion = 0.5;
                 height = Math.floor(image.options.height*distortion);
-                var newImage = utils.imageFromCanvas(image.canvas);
-                var canvas = utils.canvas(width, height);
+                utils.imageFromCanvas(image.canvas, function(err, newImage){
+                    var canvas = utils.canvas(width, height);
 
-                var context = canvas.getContext('2d');
-                context.drawImage(
-                    newImage, 0, 0,
-                    width, height
-                );
-                var data = context.getImageData(
-                    0, 0,
-                    width, height
-                ).data;
-                var result = [];
-                var currentColor;
-                for(var y=0; y < height; y++){
-                    for(var x=0; x < width; x++){
-                        var offset = y * width * 4 + x * 4;
-                        var roffset = y * width + x;
-                        var value = Math.floor(getValue(
-                            data[offset],
-                            data[offset+1],
-                            data[offset+2]
-                        ));
-                        result[roffset] = value
+                    var context = canvas.getContext('2d');
+                    context.drawImage(
+                        newImage, 0, 0,
+                        width, height
+                    );
+                    var data = context.getImageData(
+                        0, 0,
+                        width, height
+                    ).data;
+                    var result = [];
+                    var currentColor;
+                    for(var y=0; y < height; y++){
+                        for(var x=0; x < width; x++){
+                            var offset = y * width * 4 + x * 4;
+                            var roffset = y * width + x;
+                            var value = Math.floor(getValue(
+                                data[offset],
+                                data[offset+1],
+                                data[offset+2]
+                            ));
+                            result[roffset] = value
+                        }
                     }
-                }
+                    if(callback) callback(undefined, result);
+                });
             }catch(ex){
                 if(callback) callback(ex);
             }
-            if(callback) callback(undefined, result);
         },
         render : function(image, utils, callback){
             try{
@@ -120,45 +121,47 @@
                 var height = image.options.height;
                 var distortion = 0.5;
                 height = Math.floor(image.options.height*distortion);
-                var newImage = utils.imageFromCanvas(image.canvas);
-                var canvas = utils.canvas(width, height);
+                utils.imageFromCanvas(image.canvas, function(err, newImage){
+                    var canvas = utils.canvas(width, height);
 
-                var context = canvas.getContext('2d');
-                context.drawImage(
-                    newImage, 0, 0,
-                    width, height
-                );
-                var data = context.getImageData(
-                    0, 0,
-                    width, height
-                ).data;
-                var result = '';
-                var currentColor;
-                for(var y=0; y < height; y++){
-                    for(var x=0; x < width; x++){
-                        var offset = y * width * 4 + x * 4;
-                        var pixelData = [
-                            data[offset],
-                            data[offset+1],
-                            data[offset+2]
-                        ];
-                        var color = Color.code(pixelData);
-                        if(image.options.background) color += Color.backgroundCode(pixelData);
-                        var fraction = getValue(
-                            data[offset],
-                            data[offset+1],
-                            data[offset+2]
-                        )/255;
-                        var charPosition = Math.floor(image.options.alphabet.length*fraction);
-                        result += color + (image.options.alphabet[charPosition] || ' ');
+                    var context = canvas.getContext('2d');
+                    context.drawImage(
+                        newImage, 0, 0,
+                        width, height
+                    );
+                    var data = context.getImageData(
+                        0, 0,
+                        width, height
+                    ).data;
+                    var result = '';
+                    var currentColor;
+                    for(var y=0; y < height; y++){
+                        for(var x=0; x < width; x++){
+                            var offset = y * width * 4 + x * 4;
+                            var pixelData = [
+                                data[offset],
+                                data[offset+1],
+                                data[offset+2]
+                            ];
+                            //console.log('px', pixelData);
+                            var color = Color.code(pixelData);
+                            if(image.options.background) color += Color.backgroundCode(pixelData);
+                            var fraction = getValue(
+                                data[offset],
+                                data[offset+1],
+                                data[offset+2]
+                            )/255;
+                            var charPosition = Math.floor(image.options.alphabet.length*fraction);
+                            result += color + (image.options.alphabet[charPosition] || ' ');
+                        }
+                        result += Color.code()+"\n";
+                        currentColor = undefined;
                     }
-                    result += Color.code()+"\n";
-                    currentColor = undefined;
-                }
+                    if(callback) callback(undefined, result);
+                });
             }catch(ex){
                 if(callback) callback(ex);
             }
-            if(callback) callback(undefined, result);
         }
     };
     return result;
