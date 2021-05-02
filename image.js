@@ -328,6 +328,7 @@
 
     AsciiArt.Image.valueScales = {
         solid : '█'.split(''),
+        standard : '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`\''.split('').reverse(),
         variant1 : ' .,:;i1tfLCG08@'.split(''),
         variant2 : '@%#*+=-:. '.split('').reverse(),
         variant3 : '#¥¥®®ØØ$$ø0oo°++=-,.    '.split('').reverse(),
@@ -338,7 +339,7 @@
         hatching : '##XXxxx+++===---;;,,...    '.split('').reverse(),
         bits : '# '.split('').reverse(),
         binary : '01 '.split('').reverse(),
-        greyscale : ' ▤▦▩█'.split(''),
+        greyscale : ' ░░░░▒▒▒▒▓▓▓▓█'.split(''),
         blocks : ' ▖▚▜█'.split('')
     };
 
