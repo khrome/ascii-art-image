@@ -23,6 +23,7 @@
     } else if (typeof module === 'object' && module.exports) {
         var Canvas = require('canvas');
         var Image = Canvas.Image;
+        Canvas.Canvas.loadImage = Canvas.loadImage;
         Canvas = Canvas.Canvas;
         //global.cairoCanvas = Canvas;
         var fs = require('fs');
@@ -32,7 +33,10 @@
                     if (err) return cb(err);
                     var image = new Image();
                     image.src = data;
-                    cb(undefined, image);
+                    image.onload=function(){
+                        cb(undefined, image);
+                    }
+                    //cb(undefined, image);
                 });
             }, function(){
                 var res = fs.readdirSync(__dirname+'/renderers');
@@ -73,6 +77,7 @@
 
     var AsciiArt = {};
     var parentArt;
+    var requestInstance;
     AsciiArt.Image = function(options){
         if(typeof options == 'string'){
             if(options.indexOf('://') !== -1){
@@ -84,6 +89,10 @@
                     filepath : options
                 }
             }
+        }
+        if( options.filepath && options.filepath.indexOf('://') !== -1 ){
+            options.uri = options.filepath;
+            delete options.filepath;
         }
         var ob = this;
         var fixDimOptionsAccordingToAspectRatio = function(ob){
@@ -116,29 +125,62 @@
         this.ready = function(callback){
             jobs.push(callback);
         };
-        if(this.uri){
-            throw new Error('uris not yet implemented!')
+
+        var readyResourcesFromImage = function(err, image){
+            if (err) throw err;
+            ob.image = image;
+            ob.aspectRatio = ob.image.height/ob.image.width;
+            fixDimOptionsAccordingToAspectRatio(ob);
+            ob.canvas = new Canvas(ob.image.width, ob.image.height);
+            ob.context = ob.canvas.getContext('2d');
+            ob.context.drawImage(
+                ob.image, 0, 0, ob.image.width, ob.image.height
+            );
+            ob.ready = function(cb){
+                if(cb) cb()
+            };
+            jobs.forEach(function(job){
+                if(job) job();
+            });
+            jobs = [];
+        }
+
+        if(this.options.uri){
+            var img = new Image('');
+            //todo: dual mode
+            Canvas.loadImage(this.options.uri).then(function(image){
+                readyResourcesFromImage(null, image);
+            }).catch(function(err){
+                readyResourcesFromImage(err);
+            });
+            /*
+            var img = new Image('');
+            img.onload = function(){
+                readyResourcesFromImage(err, image);
+            }
+            //img.src = src;
+            img.src = ob.options.uri;
+            //*/
+            /*requestInstance({
+                uri :this.options.uri,
+                encoding: null
+            }, function(err, req, result){
+                var type = ob.options.uri.split('.').pop().toLowerCase();
+                var res = Buffer.from(result);
+                var base64 = res.toString('base64');
+                var src = 'data:image/'+type+';base64,'+base64;
+                img.onload = function(){
+                    readyResourcesFromImage(err, image);
+                }
+                //img.src = src;
+                img.src = ob.options.uri;
+            });*/
             return;
         }
         if(this.options.filepath){
             //todo: handle in UMD wrapper.. pass in assetloader?
             readImage(this.options.filepath, function(err, image){
-                if (err) throw err;
-                ob.image = image;
-                ob.aspectRatio = ob.image.height/ob.image.width;
-                fixDimOptionsAccordingToAspectRatio(ob);
-                ob.canvas = new Canvas(ob.image.width, ob.image.height);
-                ob.context = ob.canvas.getContext('2d');
-                ob.context.drawImage(
-                    ob.image, 0, 0, ob.image.width, ob.image.height
-                );
-                ob.ready = function(cb){
-                    if(cb) cb()
-                };
-                jobs.forEach(function(job){
-                    if(job) job();
-                });
-                jobs = [];
+                readyResourcesFromImage(err, image);
             });
         }
         if(this.options.imageBody){
@@ -170,9 +212,13 @@
         }
         //todo: error on no supported options
     };
+    AsciiArt.Image.useRequest = function(instance){
+        requestInstance = instance;
+    };
     AsciiArt.Image.Canvas = Canvas;
     AsciiArt.Image.Image = Image;
     AsciiArt.Image.prototype.write = function(location, callback, type){
+        console.log('??2', (new Error()).stack);
         if(typeof location === 'function' && !callback){
             callback = location;
             location = undefined;
@@ -234,14 +280,57 @@
         }
         this.options.background = true;
         var ob = this;
+
+        var generateBounds = function(min, max){
+            return function(value){
+                console.log('%', min, value, max)
+                return Math.min(max, Math.max(min, value));
+            }
+        };
+        var flip = function(fieldA, fieldB, min, max, boundFn){
+            return function(obj){
+                if(obj[fieldA] !== null) obj[fieldA] = max - obj[fieldA];
+                if(obj[fieldB] !== null) obj[fieldB] = max - obj[fieldB];
+            }
+        };
+        var swap = function(fieldA, fieldB, min, max, boundFn){
+            return function(obj){
+                if(obj[fieldA] !== null && obj[fieldB] !== null){
+                    var swap = obj[fieldA];
+                    obj[fieldA] = obj[fieldB];
+                    obj[fieldB] = swap;
+                }else{
+                    if(obj[fieldA] !== null) obj[fieldA] = obj[fieldB];
+                    if(obj[fieldB] !== null) obj[fieldB] = obj[fieldA];
+                }
+            }
+        };
+        var flipAndSwap = function(fieldA, fieldB, min, max, boundFn){
+            var doSwap = swap(fieldA, fieldB, min, max, boundFn);
+            var doFlip = flip(fieldA, fieldB, min, max, boundFn);
+            var fn = function(obj){
+                doFlip(obj);
+                if(obj[fieldA] !== null) obj[fieldA] = boundFn(obj[fieldA]);
+                if(obj[fieldB] !== null) obj[fieldB] = boundFn(obj[fieldB]);
+                doSwap(obj);
+            };
+            fn.swap = doSwap;
+            fn.flip = doFlip;
+            return fn;
+        };
+        var dumpRange = function(obj){
+            console.log('[]>', {t:obj.threshold, f:obj.floor})
+        }
         this.write(location, function(err, rendered){
             if(err) return callback(err);
             ob.options.background = false; //todo:orig
             var coloredBackground = rendered;
             var ot = ob.options.threshold;
-            if(ob.options.threshold){
-                ob.options.threshold = Math.min(255, ob.options.threshold*(ob.options.darken || 2))
-            }
+            var snapRange = generateBounds(0, 255);
+            var fas = flipAndSwap('threshold', 'floor', 0, 255, snapRange)
+            dumpRange(ob.options);
+            if(!ob.options.threshold) ob.options.threshold = 50;
+            if(!ob.options.floor) ob.options.floor = 0;
             if(ob.options.blended){
                 var stipplePrefix = (typeof ob.options.stippled === 'string')?
                     ansiColor.code(ob.options.stippled):
@@ -249,19 +338,26 @@
                 var linePrefix = (typeof ob.options.lineart === 'string')?
                     ansiColor.code(ob.options.lineart) || '':
                     '';
-                ob.writeStipple(location, function(err, r){
+                fas(ob.options);
+                dumpRange(ob.options);
+                ob.writeLineArt(location, function(err, r){ //writeLineArt
                     var rendered = Ansi.map(r,function(chr, styles){
-                            return stipplePrefix+styles.join()+chr;
+                        return stipplePrefix+chr;
                     });
+                    var ln = rendered;
+                    //console.log('?', r, rendered);
                     if(err) return callback(err);
                     var canvas = new TextGrid(coloredBackground);
                     canvas.drawOnto(rendered, 0, 0, false, true);
                     var previousResult = canvas.toString();
-                    ob.options.threshold = ot;
-                    ob.writeLineArt(location, function(err, r){
-                        var rendered = Ansi.map(r,function(chr, styles){
-                                return linePrefix+styles.join()+chr;
+                    //ob.options.threshold = ot;
+                    fas(ob.options);
+                    dumpRange(ob.options);
+                    ob.writeStipple(location, function(err, r2){
+                        var rendered = Ansi.map(r2,function(chr, styles){
+                            return linePrefix+chr;
                         });
+                        console.log('?', previousResult, rendered);
                         if(err) return callback(err);
                         var canvas = new TextGrid(previousResult);
                         canvas.drawOnto(rendered, 0, 0, true, true);

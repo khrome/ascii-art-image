@@ -36,7 +36,8 @@
                 });
                 rows = rows.map(function(line){
                     return line.map(function(value){
-                        return value < (image.options.threshold || 50);
+                        return (value < (image.options.threshold || 50)) &&
+                            (value > (image.options.floor || 0));
                     });
                 });
                 var result = braille.binary2DMapToBlocks(rows);
@@ -63,7 +64,8 @@
                 });
                 rows = rows.map(function(line){
                     return line.map(function(value){
-                        return value < (image.options.threshold || 50);
+                        return (value < (image.options.threshold || 50)) &&
+                        (value > (image.options.floor || 0));
                     });
                 });
                 var result = braille.binary2DMapToBraille(rows);
