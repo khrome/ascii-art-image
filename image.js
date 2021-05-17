@@ -33,10 +33,7 @@
                     if (err) return cb(err);
                     var image = new Image();
                     image.src = data;
-                    image.onload=function(){
-                        cb(undefined, image);
-                    }
-                    //cb(undefined, image);
+                    cb(undefined, image);
                 });
             }, function(){
                 var res = fs.readdirSync(__dirname+'/renderers');
@@ -176,7 +173,7 @@
                 img.src = ob.options.uri;
             });*/
             return;
-        }
+        };
         if(this.options.filepath){
             //todo: handle in UMD wrapper.. pass in assetloader?
             readImage(this.options.filepath, function(err, image){
@@ -218,7 +215,6 @@
     AsciiArt.Image.Canvas = Canvas;
     AsciiArt.Image.Image = Image;
     AsciiArt.Image.prototype.write = function(location, callback, type){
-        console.log('??2', (new Error()).stack);
         if(typeof location === 'function' && !callback){
             callback = location;
             location = undefined;
@@ -283,7 +279,6 @@
 
         var generateBounds = function(min, max){
             return function(value){
-                console.log('%', min, value, max)
                 return Math.min(max, Math.max(min, value));
             }
         };
@@ -328,7 +323,7 @@
             var ot = ob.options.threshold;
             var snapRange = generateBounds(0, 255);
             var fas = flipAndSwap('threshold', 'floor', 0, 255, snapRange)
-            dumpRange(ob.options);
+            //dumpRange(ob.options);
             if(!ob.options.threshold) ob.options.threshold = 50;
             if(!ob.options.floor) ob.options.floor = 0;
             if(ob.options.blended){
@@ -338,26 +333,23 @@
                 var linePrefix = (typeof ob.options.lineart === 'string')?
                     ansiColor.code(ob.options.lineart) || '':
                     '';
-                fas(ob.options);
-                dumpRange(ob.options);
+                //fas(ob.options);
+                //dumpRange(ob.options);
                 ob.writeLineArt(location, function(err, r){ //writeLineArt
                     var rendered = Ansi.map(r,function(chr, styles){
-                        return stipplePrefix+chr;
+                        return linePrefix+chr;
                     });
                     var ln = rendered;
-                    //console.log('?', r, rendered);
                     if(err) return callback(err);
                     var canvas = new TextGrid(coloredBackground);
-                    canvas.drawOnto(rendered, 0, 0, false, true);
+                    canvas.drawOnto(rendered, 0, 0, true, true);
                     var previousResult = canvas.toString();
                     //ob.options.threshold = ot;
                     fas(ob.options);
-                    dumpRange(ob.options);
                     ob.writeStipple(location, function(err, r2){
                         var rendered = Ansi.map(r2,function(chr, styles){
-                            return linePrefix+chr;
+                            return stipplePrefix+chr;
                         });
-                        console.log('?', previousResult, rendered);
                         if(err) return callback(err);
                         var canvas = new TextGrid(previousResult);
                         canvas.drawOnto(rendered, 0, 0, true, true);
